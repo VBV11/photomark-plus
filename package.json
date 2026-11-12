@@ -1,0 +1,17 @@
+{
+	"name": "photomark-plus",
+	"version": "1.0.0",
+	"description": "Obsidian plugin: mark up images without leaving your notes.",
+	"main": "main.js",
+	"private": true,
+	"scripts": {
+		"test": "node test/run.js",
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
+	},
+	"keywords": ["obsidian", "obsidian-plugin", "images", "annotate", "screenshots"],
+	"author": "Lex",
+	"license": "MIT",
+	"devDependencies": {
+		"playwright": "^1.49.0"
+	}
+}
