@@ -1,0 +1,168 @@
+/* PhotoMark+ */
+
+/* floating "Mark" button in the top-right corner of an image */
+.pmp-hover {
+  position: fixed;
+  z-index: var(--layer-popover, 30);
+  display: none;
+  padding: 3px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  box-shadow: var(--shadow-s);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold, 600);
+  line-height: 1.7;
+  cursor: pointer;
+}
+.pmp-hover.is-visible { display: block; }
+.pmp-hover:hover {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+/* editor window */
+.modal.pmp-modal {
+  width: 94vw;
+  max-width: 94vw;
+  height: 92vh;
+  max-height: 92vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modal.pmp-modal .modal-title { display: none; }
+.modal.pmp-modal .pmp-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* toolbar */
+.pmp-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 10px 48px 10px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.pmp-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  max-width: 30%;
+  margin-right: auto;
+}
+.pmp-filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-semibold, 600);
+}
+.pmp-hint {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  white-space: nowrap;
+}
+.pmp-tools,
+.pmp-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pmp-tools {
+  padding: 3px;
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-secondary);
+}
+.pmp-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--input-height, 32px);
+  padding: 0 10px;
+  box-shadow: none;
+}
+.pmp-bar button.pmp-tool {
+  background: transparent;
+  color: var(--text-muted);
+}
+.pmp-bar button.pmp-tool:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.pmp-bar button.pmp-tool.is-active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+.pmp-bar button:disabled { opacity: 0.45; cursor: default; }
+.pmp-icon { display: inline-flex; }
+.pmp-icon svg { width: 16px; height: 16px; }
+.pmp-color-wrap {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 0 4px;
+}
+.pmp-color {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--background-modifier-border);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+.pmp-color::-webkit-color-swatch-wrapper { padding: 0; }
+.pmp-color::-webkit-color-swatch { border: 0; border-radius: 50%; }
+
+/* canvas */
+.pmp-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--background-secondary);
+}
+.pmp-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  touch-action: none;
+  border-radius: 4px;
+  background: repeating-conic-gradient(var(--background-modifier-border) 0 25%, transparent 0 50%) 0 0 / 16px 16px; /* checkerboard for transparent PNGs */
+  box-shadow: var(--shadow-l);
+}
+.pmp-canvas.pmp-crosshair { cursor: crosshair; }
+.pmp-status {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 8px 14px;
+  border-radius: var(--radius-m, 8px);
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+  font-size: var(--font-ui-small);
+}
+.pmp-status:empty { display: none; }
+
+/* smaller windows: tool icons without labels (the tooltips still name them) */
+@media (max-width: 1400px) {
+  .pmp-tool .pmp-label { display: none; }
+}
+/* narrow screens and phones: icons only, hint hidden */
+@media (max-width: 760px) {
+  .pmp-hint { display: none; }
+  .pmp-name { max-width: 100%; flex-basis: 100%; }
+  .pmp-tool .pmp-label,
+  .pmp-action:not(.pmp-save) .pmp-label { display: none; }
+  .pmp-bar { padding-right: 44px; }
+}

@@ -1,0 +1,10 @@
+{
+	"id": "photomark-plus",
+	"name": "PhotoMark+",
+	"version": "1.0.0",
+	"minAppVersion": "1.5.0",
+	"description": "Mark up images without leaving your notes: draw rectangles, ellipses, arrows and numbered markers, pixelate sensitive parts, and save.",
+	"author": "Lex",
+	"authorUrl": "https://github.com/VBV11",
+	"isDesktopOnly": false
+}
