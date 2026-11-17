@@ -12,7 +12,7 @@ const { Plugin, Modal, Notice, TFile, FuzzySuggestModal, PluginSettingTab, Setti
 
 const DEFAULT_SETTINGS = {
   color: '#ff1f1f',
-  blockColor: '#000000', // solid blocks have their own color, black by default
+  blockColor: '#ff1f1f', // solid blocks have their own color, red by default
   lineWidth: 0, // 0 = automatic (scales with the image)
   quality: 92, // JPEG / WebP quality
   saveMode: 'overwrite', // 'overwrite' | 'copy'
@@ -45,7 +45,7 @@ const STRINGS = {
     discardTitle: 'Discard changes?', discardText: 'The marks you drew on this image will be lost.', discard: 'Discard', keepEditing: 'Keep editing',
     noFile: 'Open a note or an image first.', noImages: 'This note has no PNG, JPG or WebP image.', pickImage: 'Which image do you want to mark up?',
     sColor: 'Default color', sColorDesc: 'Used for new marks. You can still pick another color in the editor.',
-    sBlockColor: 'Block color', sBlockColorDesc: 'Color of solid blocks that hide something (black by default). Changing the color while the Block tool is active also changes this.',
+    sBlockColor: 'Block color', sBlockColorDesc: 'Color of solid blocks that hide something (red by default). Changing the color while the Block tool is active also changes this.',
     sLineWidth: 'Line width', sLineWidthDesc: 'In pixels of the image. 0 = automatic, scaled to the size of the image.',
     sQuality: 'JPEG and WebP quality', sQualityDesc: 'Only used when saving JPEG or WebP files. PNG is always lossless.',
     sSaveMode: 'When saving', sSaveModeDesc: 'Overwrite replaces the original file (the previous version is gone unless you use File Recovery, Sync or git). Copy keeps the original and updates the links in the note you started from.',
@@ -66,7 +66,7 @@ const STRINGS = {
     discardTitle: 'Wijzigingen weggooien?', discardText: 'De markeringen op deze afbeelding gaan verloren.', discard: 'Weggooien', keepEditing: 'Verder bewerken',
     noFile: 'Open eerst een notitie of afbeelding.', noImages: 'Deze notitie heeft geen PNG-, JPG- of WebP-afbeelding.', pickImage: 'Welke afbeelding wil je markeren?',
     sColor: 'Standaardkleur', sColorDesc: 'Voor nieuwe markeringen. In de editor kun je altijd een andere kleur kiezen.',
-    sBlockColor: 'Kleur van blokken', sBlockColorDesc: 'Kleur van dichte blokken om iets te verbergen (standaard zwart). Een andere kleur kiezen terwijl Blok aan staat, verandert deze ook.',
+    sBlockColor: 'Kleur van blokken', sBlockColorDesc: 'Kleur van dichte blokken om iets te verbergen (standaard rood). Een andere kleur kiezen terwijl Blok aan staat, verandert deze ook.',
     sLineWidth: 'Lijndikte', sLineWidthDesc: 'In pixels van de afbeelding. 0 = automatisch, afhankelijk van de grootte van de afbeelding.',
     sQuality: 'Kwaliteit JPEG en WebP', sQualityDesc: 'Alleen bij het opslaan van JPEG- of WebP-bestanden. PNG is altijd verliesvrij.',
     sSaveMode: 'Bij opslaan', sSaveModeDesc: 'Overschrijven vervangt het originele bestand (de vorige versie is weg, tenzij je File Recovery, Sync of git gebruikt). Kopie bewaart het origineel en werkt de links bij in de notitie waaruit je begon.',
@@ -260,7 +260,7 @@ class MarkupModal extends Modal {
     this.colorInput.type = 'color';
     this.colorInput.value = this.color;
     this.colorInput.setAttribute('aria-label', t('color'));
-    // the Block tool has its own color (black by default), the other tools share one
+    // the Block tool has its own color (red by default), the other tools share one
     this.colorInput.addEventListener('input', () => { if (this.tool === 'block') this.blockColor = this.colorInput.value; else this.color = this.colorInput.value; });
     this.colorInput.addEventListener('change', () => {
       if (this.tool === 'block') this.plugin.settings.blockColor = this.blockColor; else this.plugin.settings.color = this.color;

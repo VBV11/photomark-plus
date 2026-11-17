@@ -13,7 +13,7 @@ Screenshots in notes often need a quick "look here": a box around a setting, an 
 ## Features
 
 - **Mark button on every image.** Appears in the top-right corner when you hover over an image (on touch screens: tap the image first).
-- **Six tools:** rectangle, ellipse, arrow, numbered marker (counts up automatically), solid block (black by default) and pixelate.
+- **Six tools:** rectangle, ellipse, arrow, numbered marker (counts up automatically), solid block (red by default) and pixelate.
 - **Color picker** in the toolbar; the line width scales with the size of the image, or set a fixed width.
 - **Undo, clear and keyboard shortcuts** for everything.
 - **Two ways to save:** overwrite the original, or save a copy next to it and let the plugin update the embeds in your note.

@@ -1,6 +1,6 @@
 {
 	"name": "photomark-plus",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "Obsidian plugin: mark up images without leaving your notes.",
 	"main": "main.js",
 	"private": true,
