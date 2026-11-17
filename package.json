@@ -1,17 +1,25 @@
 {
 	"name": "photomark-plus",
-	"version": "1.1.1",
-	"description": "Obsidian plugin: mark up images without leaving your notes.",
+	"version": "2.0.0",
+	"description": "Obsidian plugin: a fast photo editor inside your notes.",
 	"main": "main.js",
 	"private": true,
 	"scripts": {
+		"build": "node --check main.js && node -e \"for (const f of ['manifest.json', 'versions.json', 'package.json']) JSON.parse(require('fs').readFileSync(f, 'utf8'))\"",
 		"test": "node test/run.js",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
-	"keywords": ["obsidian", "obsidian-plugin", "images", "annotate", "screenshots"],
+	"keywords": [
+		"obsidian",
+		"obsidian-plugin",
+		"images",
+		"photo-editor",
+		"annotate",
+		"screenshots"
+	],
 	"author": "Lex",
 	"license": "MIT",
 	"devDependencies": {
-		"playwright": "^1.49.0"
+		"playwright": "1.64.1"
 	}
 }
