@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- New Block tool (`B`): a solid rectangle to hide passwords, names or addresses completely.
+  It has its own color, black by default, separate from the color of the other tools.
+- Setting for the block color.
+
 ## 1.0.0
 
 First release.

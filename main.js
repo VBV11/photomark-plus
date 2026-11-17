@@ -2,7 +2,7 @@
 /*
  * PhotoMark+ for Obsidian
  * Mark up images without leaving your notes: rectangles, ellipses, arrows,
- * numbered markers and pixelation. Saves straight back into the vault.
+ * numbered markers, solid blocks and pixelation. Saves straight back into the vault.
  *
  * Plain JavaScript on purpose: this file is the source, there is no build step.
  * https://github.com/VBV11/photomark-plus
@@ -12,6 +12,7 @@ const { Plugin, Modal, Notice, TFile, FuzzySuggestModal, PluginSettingTab, Setti
 
 const DEFAULT_SETTINGS = {
   color: '#ff1f1f',
+  blockColor: '#000000', // solid blocks have their own color, black by default
   lineWidth: 0, // 0 = automatic (scales with the image)
   quality: 92, // JPEG / WebP quality
   saveMode: 'overwrite', // 'overwrite' | 'copy'
@@ -28,6 +29,7 @@ const TOOLS = [
   { id: 'ellipse', key: 'E', icon: 'circle' },
   { id: 'arrow', key: 'A', icon: 'move-up-right' },
   { id: 'number', key: 'N', icon: 'hash' },
+  { id: 'block', key: 'B', icon: 'eye-off' },
   { id: 'pixelate', key: 'P', icon: 'grid-3x3' },
 ];
 
@@ -35,7 +37,7 @@ const TOOLS = [
 const STRINGS = {
   en: {
     mark: 'Mark', markTitle: 'Mark up this image (PhotoMark+)', menuMark: 'Mark image', menuMarkNamed: (n) => `Mark image: ${n}`,
-    command: 'Mark image', hint: 'Drag to draw', rect: 'Rectangle', ellipse: 'Ellipse', arrow: 'Arrow', number: 'Number', pixelate: 'Pixelate',
+    command: 'Mark image', hint: 'Drag to draw', rect: 'Rectangle', ellipse: 'Ellipse', arrow: 'Arrow', number: 'Number', block: 'Block', pixelate: 'Pixelate',
     color: 'Color', undo: 'Undo', clear: 'Clear', cancel: 'Cancel', save: 'Save', saving: 'Saving…', loading: 'Loading…',
     loadFailed: 'This image could not be loaded.', tooLarge: 'This image is too large to edit here (more than 16 megapixels).',
     saveFailed: (e) => `Saving failed: ${e}`, saved: (n) => `Saved ${n}`, savedCopy: (n, k) => `Saved as ${n}` + (k ? ` (${k} link${k === 1 ? '' : 's'} updated)` : ''),
@@ -43,6 +45,7 @@ const STRINGS = {
     discardTitle: 'Discard changes?', discardText: 'The marks you drew on this image will be lost.', discard: 'Discard', keepEditing: 'Keep editing',
     noFile: 'Open a note or an image first.', noImages: 'This note has no PNG, JPG or WebP image.', pickImage: 'Which image do you want to mark up?',
     sColor: 'Default color', sColorDesc: 'Used for new marks. You can still pick another color in the editor.',
+    sBlockColor: 'Block color', sBlockColorDesc: 'Color of solid blocks that hide something (black by default). Changing the color while the Block tool is active also changes this.',
     sLineWidth: 'Line width', sLineWidthDesc: 'In pixels of the image. 0 = automatic, scaled to the size of the image.',
     sQuality: 'JPEG and WebP quality', sQualityDesc: 'Only used when saving JPEG or WebP files. PNG is always lossless.',
     sSaveMode: 'When saving', sSaveModeDesc: 'Overwrite replaces the original file (the previous version is gone unless you use File Recovery, Sync or git). Copy keeps the original and updates the links in the note you started from.',
@@ -55,7 +58,7 @@ const STRINGS = {
   },
   nl: {
     mark: 'Markeren', markTitle: 'Deze afbeelding markeren (PhotoMark+)', menuMark: 'Afbeelding markeren', menuMarkNamed: (n) => `Markeren: ${n}`,
-    command: 'Afbeelding markeren', hint: 'Sleep om te tekenen', rect: 'Kader', ellipse: 'Ovaal', arrow: 'Pijl', number: 'Nummer', pixelate: 'Vervagen',
+    command: 'Afbeelding markeren', hint: 'Sleep om te tekenen', rect: 'Kader', ellipse: 'Ovaal', arrow: 'Pijl', number: 'Nummer', block: 'Blok', pixelate: 'Vervagen',
     color: 'Kleur', undo: 'Ongedaan', clear: 'Wissen', cancel: 'Annuleren', save: 'Opslaan', saving: 'Opslaan…', loading: 'Laden…',
     loadFailed: 'Deze afbeelding kon niet worden geladen.', tooLarge: 'Deze afbeelding is te groot om hier te bewerken (meer dan 16 megapixel).',
     saveFailed: (e) => `Opslaan mislukt: ${e}`, saved: (n) => `Opgeslagen: ${n}`, savedCopy: (n, k) => `Opgeslagen als ${n}` + (k ? ` (${k} link${k === 1 ? '' : 's'} bijgewerkt)` : ''),
@@ -63,6 +66,7 @@ const STRINGS = {
     discardTitle: 'Wijzigingen weggooien?', discardText: 'De markeringen op deze afbeelding gaan verloren.', discard: 'Weggooien', keepEditing: 'Verder bewerken',
     noFile: 'Open eerst een notitie of afbeelding.', noImages: 'Deze notitie heeft geen PNG-, JPG- of WebP-afbeelding.', pickImage: 'Welke afbeelding wil je markeren?',
     sColor: 'Standaardkleur', sColorDesc: 'Voor nieuwe markeringen. In de editor kun je altijd een andere kleur kiezen.',
+    sBlockColor: 'Kleur van blokken', sBlockColorDesc: 'Kleur van dichte blokken om iets te verbergen (standaard zwart). Een andere kleur kiezen terwijl Blok aan staat, verandert deze ook.',
     sLineWidth: 'Lijndikte', sLineWidthDesc: 'In pixels van de afbeelding. 0 = automatisch, afhankelijk van de grootte van de afbeelding.',
     sQuality: 'Kwaliteit JPEG en WebP', sQualityDesc: 'Alleen bij het opslaan van JPEG- of WebP-bestanden. PNG is altijd verliesvrij.',
     sSaveMode: 'Bij opslaan', sSaveModeDesc: 'Overschrijven vervangt het originele bestand (de vorige versie is weg, tenzij je File Recovery, Sync of git gebruikt). Kopie bewaart het origineel en werkt de links bij in de notitie waaruit je begon.',
@@ -157,6 +161,9 @@ function drawMark(ctx, m, index) {
       ctx.fillText(String(index), m.x2, m.y2 + r * 0.06);
       break;
     }
+    case 'block':
+      ctx.fillRect(x, y, w, h);
+      break;
     case 'pixelate': {
       if (w < 2 || h < 2) break;
       const block = Math.max(6, Math.round(Math.max(ctx.canvas.width, ctx.canvas.height) / 120));
@@ -222,6 +229,7 @@ class MarkupModal extends Modal {
     this.current = null; // mark being drawn
     this.tool = TOOLS.some((x) => x.id === plugin.settings.tool) ? plugin.settings.tool : 'rect';
     this.color = plugin.settings.color;
+    this.blockColor = plugin.settings.blockColor || DEFAULT_SETTINGS.blockColor;
     this.width = 4;
     this.busy = false;
     this.saved = false;
@@ -252,8 +260,12 @@ class MarkupModal extends Modal {
     this.colorInput.type = 'color';
     this.colorInput.value = this.color;
     this.colorInput.setAttribute('aria-label', t('color'));
-    this.colorInput.addEventListener('input', () => { this.color = this.colorInput.value; });
-    this.colorInput.addEventListener('change', () => { this.plugin.settings.color = this.color; this.plugin.saveSettings(); });
+    // the Block tool has its own color (black by default), the other tools share one
+    this.colorInput.addEventListener('input', () => { if (this.tool === 'block') this.blockColor = this.colorInput.value; else this.color = this.colorInput.value; });
+    this.colorInput.addEventListener('change', () => {
+      if (this.tool === 'block') this.plugin.settings.blockColor = this.blockColor; else this.plugin.settings.color = this.color;
+      this.plugin.saveSettings();
+    });
     colorWrap.append(this.colorInput);
     tools.append(colorWrap);
     const actions = el('div', 'pmp-actions');
@@ -303,7 +315,7 @@ class MarkupModal extends Modal {
       e.preventDefault();
       this.canvas.setPointerCapture(e.pointerId);
       const p = this.point(e);
-      this.current = { tool: this.tool, color: this.color, width: this.width, x1: p.x, y1: p.y, x2: p.x, y2: p.y };
+      this.current = { tool: this.tool, color: this.tool === 'block' ? this.blockColor : this.color, width: this.width, x1: p.x, y1: p.y, x2: p.x, y2: p.y };
       this.render();
     });
     this.canvas.addEventListener('pointermove', (e) => {
@@ -340,6 +352,7 @@ class MarkupModal extends Modal {
     this.tool = id;
     for (const [k, b] of Object.entries(this.toolButtons)) b.classList.toggle('is-active', k === id);
     this.canvas.classList.toggle('pmp-crosshair', id !== 'number');
+    if (this.colorInput) this.colorInput.value = id === 'block' ? this.blockColor : this.color;
     if (this.plugin.settings.tool !== id) { this.plugin.settings.tool = id; this.plugin.saveSettings(); }
   }
 
@@ -463,6 +476,8 @@ class PhotoMarkSettingTab extends PluginSettingTab {
         .onChange((v) => { s.language = v; save(); this.plugin.applyLanguage(); this.display(); }));
     new Setting(containerEl).setName(t('sColor')).setDesc(t('sColorDesc'))
       .addColorPicker((c) => c.setValue(s.color).onChange((v) => { s.color = v; save(); }));
+    new Setting(containerEl).setName(t('sBlockColor')).setDesc(t('sBlockColorDesc'))
+      .addColorPicker((c) => c.setValue(s.blockColor || DEFAULT_SETTINGS.blockColor).onChange((v) => { s.blockColor = v; save(); }));
     new Setting(containerEl).setName(t('sLineWidth')).setDesc(t('sLineWidthDesc'))
       .addSlider((sl) => sl.setLimits(0, 24, 1).setValue(s.lineWidth).setDynamicTooltip().onChange((v) => { s.lineWidth = v; save(); }));
     new Setting(containerEl).setName(t('sQuality')).setDesc(t('sQualityDesc'))

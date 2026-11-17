@@ -2,7 +2,7 @@
 
 Mark up images without leaving your notes. Hover over an image, click **Mark**, draw, save. That is the whole workflow.
 
-Rectangles, ellipses, arrows, numbered markers and a pixelate tool for hiding passwords, addresses or faces. Works on desktop and on mobile, in reading view and in Live Preview.
+Rectangles, ellipses, arrows, numbered markers, and solid blocks or pixelation for hiding passwords, addresses or faces. Works on desktop and on mobile, in reading view and in Live Preview.
 
 ![The PhotoMark+ editor with a rectangle, an ellipse, numbered markers, an arrow and a pixelated address](docs/editor.png)
 
@@ -13,7 +13,7 @@ Screenshots in notes often need a quick "look here": a box around a setting, an 
 ## Features
 
 - **Mark button on every image.** Appears in the top-right corner when you hover over an image (on touch screens: tap the image first).
-- **Five tools:** rectangle, ellipse, arrow, numbered marker (counts up automatically) and pixelate.
+- **Six tools:** rectangle, ellipse, arrow, numbered marker (counts up automatically), solid block (black by default) and pixelate.
 - **Color picker** in the toolbar; the line width scales with the size of the image, or set a fixed width.
 - **Undo, clear and keyboard shortcuts** for everything.
 - **Two ways to save:** overwrite the original, or save a copy next to it and let the plugin update the embeds in your note.
@@ -35,7 +35,7 @@ In the editor, pick a tool and drag on the image. For a numbered marker, just cl
 
 | Key | Action |
 |---|---|
-| `R` `E` `A` `N` `P` | Rectangle, Ellipse, Arrow, Number, Pixelate |
+| `R` `E` `A` `N` `B` `P` | Rectangle, Ellipse, Arrow, Number, Block, Pixelate |
 | `Ctrl/Cmd+Z` | Undo the last mark |
 | `Enter` or `Ctrl/Cmd+S` | Save |
 | `Esc` | Cancel (asks first if you drew something) |
