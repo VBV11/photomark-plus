@@ -1,6 +1,6 @@
 {
 	"name": "photomark-plus",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Obsidian plugin: a fast photo editor inside your notes.",
 	"main": "main.js",
 	"private": true,
