@@ -1,5 +1,8 @@
 # PhotoMark+
 
+## ⚠️ PLUGIN IN EARLY STAGES
+## [REPORT ANY ISSUE HERE AND I WILL FIX IT](https://github.com/VBV11/photomark-plus/issues)
+
 A fast photo editor inside your notes. Hover over an image, click **Edit**, and crop, rotate, adjust, draw, highlight, add text and arrows, or hide what nobody else should see. Then save, go to the next image, or delete one. You never leave Obsidian.
 
 Works on desktop and on mobile, in reading view and in Live Preview.
@@ -132,7 +135,7 @@ cd photomark-plus
 npm ci                      # Playwright, only needed for the tests
 npx playwright install chromium
 npm run build               # syntax check of main.js and the JSON files
-npm test                    # 81 checks in headless Chromium against a mocked Obsidian API (test/mock-obsidian.js)
+npm test                    # 84 checks in headless Chromium against a mocked Obsidian API (test/mock-obsidian.js)
 node test/run.js --shots    # also regenerates the screenshots in docs/
 ```
 

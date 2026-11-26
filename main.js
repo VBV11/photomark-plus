@@ -654,6 +654,8 @@ class EditorModal extends Modal {
     this.modalEl.classList.add('pmp-modal');
     this.containerEl.classList.add('pmp-container');
     this.contentEl.classList.add('pmp-content');
+    // the editor has its own close button next to Save; Obsidian's own one would overlap it
+    this.modalEl.querySelectorAll('.modal-close-button').forEach((b) => b.remove());
     this.buildUi();
     this.registerKeys();
     this.onResize = () => { if (this.fitted) this.fit(); else this.layoutCanvas(); if (this.toolbarEdges) this.toolbarEdges(); };
@@ -1040,26 +1042,49 @@ class EditorModal extends Modal {
     this.layoutCanvas();
   }
 
-  setZoom(z, anchor) {
-    if (!this.ready) return;
-    const old = this.zoom;
-    this.zoom = clamp(z, 0.05, 16);
-    this.fitted = false;
-    const st = this.stage;
-    const ax = anchor ? anchor.x : st.clientWidth / 2, ay = anchor ? anchor.y : st.clientHeight / 2;
-    const cx = (st.scrollLeft + ax) / old, cy = (st.scrollTop + ay) / old;
-    this.layoutCanvas();
-    st.scrollLeft = cx * this.zoom - ax;
-    st.scrollTop = cy * this.zoom - ay;
+  // where a screen point lies on the image, as a fraction of the shown canvas
+  fracAt(x, y) {
+    const r = this.canvas.getBoundingClientRect();
+    return { fx: (x - r.left) / Math.max(1, r.width), fy: (y - r.top) / Math.max(1, r.height) };
   }
 
-  zoomBy(f, anchor) { this.setZoom(this.zoom * f, anchor); }
+  // scroll so that image point f is under screen point (x, y); exact, also while the image is centered
+  keepAt(f, x, y) {
+    const r = this.canvas.getBoundingClientRect();
+    this.stage.scrollLeft += r.left + f.fx * r.width - x;
+    this.stage.scrollTop += r.top + f.fy * r.height - y;
+  }
 
+  // at = screen point (clientX/Y) that stays in place; default the middle of the stage
+  setZoom(z, at, frac) {
+    if (!this.ready) return;
+    const sr = this.stage.getBoundingClientRect();
+    const p = at || { x: sr.left + sr.width / 2, y: sr.top + sr.height / 2 };
+    const f = frac || this.fracAt(p.x, p.y);
+    this.zoom = clamp(z, 0.05, 16);
+    this.fitted = false;
+    this.layoutCanvas();
+    this.keepAt(f, p.x, p.y);
+  }
+
+  zoomBy(f, at) { this.setZoom(this.zoom * f, at); }
+
+  // Ctrl/Cmd + wheel and trackpad pinch zoom; a mouse wheel zooms too; trackpad scrolling pans
   onWheel(e) {
-    if (!(e.ctrlKey || e.metaKey) || !this.ready) return;
+    if (!this.ready) return;
+    const mouseWheel = e.deltaMode === 1 || (e.deltaX === 0 && Math.abs(e.deltaY) >= 40 && Number.isInteger(e.deltaY));
+    if (!(e.ctrlKey || e.metaKey) && !mouseWheel) return;
     e.preventDefault();
-    const r = this.stage.getBoundingClientRect();
-    this.zoomBy(Math.exp(-e.deltaY * 0.0025), { x: e.clientX - r.left, y: e.clientY - r.top });
+    const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+    // small steps (trackpad pinch) need a higher rate than the 100-pixel notches of a mouse wheel
+    const rate = Math.abs(dy) < 40 ? 0.01 : 0.0022;
+    // during one series of wheel steps keep aiming at the same image point: while the image is still
+    // smaller than the window it stays centered, and the point comes back under the pointer once it can
+    const now = Date.now(), a = this.wheelAnchor;
+    const same = a && now - a.t < 400 && Math.abs(a.x - e.clientX) < 4 && Math.abs(a.y - e.clientY) < 4;
+    const f = same ? a.f : this.fracAt(e.clientX, e.clientY);
+    this.wheelAnchor = { f, x: e.clientX, y: e.clientY, t: now };
+    this.setZoom(this.zoom * Math.exp(-clamp(dy, -300, 300) * rate), { x: e.clientX, y: e.clientY }, f);
   }
 
   // ---------- tools and options ----------
@@ -1466,7 +1491,9 @@ class EditorModal extends Modal {
     if (focused && focused !== document.body && this.contentEl.contains(focused) && focused.blur) focused.blur();
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (this.pointers.size === 2) { // two fingers: pinch to zoom and pan
-      this.drag = { kind: 'pinch', start: this.pinchState() };
+      const st = this.pinchState();
+      st.f = this.fracAt(st.cx, st.cy);
+      this.drag = { kind: 'pinch', start: st };
       return;
     }
     if (this.pointers.size > 2) return;
@@ -1527,14 +1554,12 @@ class EditorModal extends Modal {
     if (!d) return;
     if (d.kind === 'pinch') {
       if (this.pointers.size < 2) return;
+      // the image point that was under the fingers stays under them: zoom and pan in one gesture
       const now = this.pinchState(), s = d.start;
-      const r = this.stage.getBoundingClientRect();
-      const anchor = { x: now.cx - r.left, y: now.cy - r.top };
-      this.setZoom(s.zoom * (now.dist / Math.max(1, s.dist)), anchor);
-      this.stage.scrollLeft -= now.cx - (d.lastCx || s.cx);
-      this.stage.scrollTop -= now.cy - (d.lastCy || s.cy);
-      d.lastCx = now.cx;
-      d.lastCy = now.cy;
+      this.zoom = clamp(s.zoom * (now.dist / Math.max(1, s.dist)), 0.05, 16);
+      this.fitted = false;
+      this.layoutCanvas();
+      this.keepAt(s.f, now.cx, now.cy);
       return;
     }
     if (d.kind === 'pan') {
@@ -1586,7 +1611,8 @@ class EditorModal extends Modal {
     if (d.kind === 'crop' || d.kind === 'pan') { this.render(); return; }
     if (d.kind === 'move') { if (d.moved) this.commit(); return; }
     if (d.kind === 'draw' && !cancelled) {
-      const m = d.mark, min = m.width * 1.5;
+      // minimum size on screen (not in image pixels), so small marks also work when zoomed in
+      const m = d.mark, min = 4 * (this.canvas.width / Math.max(1, this.canvas.getBoundingClientRect().width));
       const ok = m.points ? m.points.length > 1 || m.tool === 'pen'
         : m.tool === 'line' || m.tool === 'arrow' ? Math.hypot(m.x2 - m.x1, m.y2 - m.y1) > min
           : Math.abs(m.x2 - m.x1) > min && Math.abs(m.y2 - m.y1) > min;

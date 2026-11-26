@@ -245,6 +245,27 @@ let BASE;
     await page.keyboard.press('0');
     const z0 = await page.$eval('.pmp-zoom-label', (b) => b.textContent);
     ok('zoom with + and back to fit with 0', z1 !== z0 && parseInt(z1, 10) > parseInt(z0, 10), [z1, z0]);
+    // zoom under the mouse: the image point under the pointer stays there, also with a plain mouse wheel
+    const pt = await toPage(page, 1000, 300);
+    const under = () => page.evaluate(([x, y]) => { const e = window.modalStack.find((m) => m.gallery); const f = e.fracAt(x, y); const v = e.view(); return [Math.round(v.x + f.fx * v.w), Math.round(v.y + f.fy * v.h)]; }, [pt.x, pt.y]);
+    await page.mouse.move(pt.x, pt.y);
+    await page.keyboard.down('Control'); for (let i = 0; i < 3; i++) { await page.mouse.wheel(0, -200); await sleep(30); } await page.keyboard.up('Control');
+    await sleep(80);
+    const u1 = await under(), z2 = await ed(page, 'return e.zoom');
+    await page.mouse.wheel(0, -100);
+    await sleep(80);
+    const u2 = await under(), z3 = await ed(page, 'return e.zoom');
+    ok('Ctrl+wheel and mouse wheel zoom in around the pointer, in steady steps', z3 > z2 && z2 > 1.8 && z2 < 3.5 && Math.abs(u1[0] - 1000) <= 3 && Math.abs(u1[1] - 300) <= 3 && Math.abs(u2[0] - 1000) <= 3 && Math.abs(u2[1] - 300) <= 3, { z2, z3, u1, u2 });
+    // drawing while zoomed in lands exactly where you drag
+    const before = (await marks(page)).length;
+    await page.keyboard.press('r');
+    await page.mouse.move(pt.x - 150, pt.y - 100); await page.mouse.down(); await page.mouse.move(pt.x, pt.y, { steps: 5 }); await page.mouse.up();
+    await sleep(60);
+    const mk = await ed(page, 'const m = e.state.marks.at(-1); return [Math.round(Math.max(m.x1, m.x2)), Math.round(Math.max(m.y1, m.y2)), e.state.marks.length]');
+    ok('drawing while zoomed in lands under the pointer', mk[2] === before + 1 && Math.abs(mk[0] - 1000) <= 3 && Math.abs(mk[1] - 300) <= 3, mk);
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('0');
+    ok('no Obsidian close button over the Save button', (await page.$$('.modal.pmp-modal .modal-close-button')).length === 0);
     // close with changes asks first
     await page.keyboard.press('Escape');
     await sleep(150);
